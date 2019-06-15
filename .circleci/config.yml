@@ -51,12 +51,12 @@ workflows:
   version: 2
   build-deploy:
     jobs:
-      # - el6
+      - el6
       - el7
       - deploy:
           context: org-global
           requires:
-            # - el6
+            - el6
             - el7
           filters:
             branches:
