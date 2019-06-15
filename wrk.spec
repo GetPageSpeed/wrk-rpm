@@ -1,6 +1,6 @@
 Name: wrk
 Version: 4.1.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: HTTP benchmarking tool
 License: Modified Apache 2.0 License
 URL: https://github.com/wg/wrk
@@ -11,7 +11,6 @@ BuildRequires: make
 BuildRequires: gcc
 
 %if ( 0%{?fedora} >= 27 )
-%global debug_package %{nil}
 BuildRequires: perl
 %endif
 
@@ -26,10 +25,12 @@ BuildRequires: perl
 
 %prep
 %setup -q
+# make sure debuginfo has sources
+sed -i 's@CFLAGS  += @CFLAGS  += -g @' Makefile
 
 %build
 # EL7 doesn't have this macro: %make_build VER=%{version}
-%{__make} VER=%{version} %{?_smp_mflags} 
+%{__make} VER=%{version} %{?_smp_mflags}
 
 %install
 %{__install} -Dpm0755 %{name} %{buildroot}%{_bindir}/%{name}
@@ -42,6 +43,9 @@ BuildRequires: perl
 %{_bindir}/%{name}
 
 %changelog
+* Sat Jun 15 2019 Danila Vershinin <info@getpagespeed.com> 4.1.0-2
+- proper debuginfo package
+
 * Sat Oct 27 2018 Anatolii Vorona <vorona.tolik@gmail.com> 4.1.0-1
 - added build requires for Copr Build Service (fedora 27+)
 
