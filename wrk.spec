@@ -27,8 +27,6 @@ BuildRequires: perl
 
 %prep
 %setup -q
-# make sure debuginfo has sources (only replaces first line
-sed -i '1s@^CFLAGS  += @CFLAGS  += -g @' Makefile
 # use system libs
 sed -i 's@-I$(WITH_LUAJIT)/include@`pkg-config --cflags luajit`@' Makefile
 sed -i 's@-L$(WITH_LUAJIT)/lib@`pkg-config --libs luajit`@' Makefile
@@ -37,7 +35,8 @@ sed -i 's@-L$(WITH_OPENSSL)/lib@`pkg-config --cflags openssl`@' Makefile
 
 %build
 # EL7 doesn't have this macro: %%make_build macro
-%{__make} VER=%{version} %{?_smp_mflags} WITH_LUAJIT=SYS WITH_OPENSSL=SYS
+# passing -g because Makefile doesn't (for debuginfo)
+CFLAGS='-g' %{__make} VER=%{version} %{?_smp_mflags} WITH_LUAJIT=SYS WITH_OPENSSL=SYS
 
 %install
 %{__install} -Dpm0755 %{name} %{buildroot}%{_bindir}/%{name}
