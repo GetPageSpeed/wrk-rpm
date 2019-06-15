@@ -1,6 +1,6 @@
 Name: wrk
 Version: 4.1.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 Summary: HTTP benchmarking tool
 License: Modified Apache 2.0 License
 URL: https://github.com/wg/wrk
@@ -9,6 +9,8 @@ Source0: %{url}/archive/%{version}/%{name}-%{version}.tar.gz
 
 BuildRequires: make
 BuildRequires: gcc
+BuildRequires: pkgconfig(luajit)
+BuildRequires: pkgconfig(openssl)
 
 %if ( 0%{?fedora} >= 27 )
 BuildRequires: perl
@@ -25,12 +27,17 @@ BuildRequires: perl
 
 %prep
 %setup -q
-# make sure debuginfo has sources
-sed -i 's@CFLAGS  += @CFLAGS  += -g @' Makefile
+# make sure debuginfo has sources (only replaces first line
+sed -i '1s@^CFLAGS  += @CFLAGS  += -g @' Makefile
+# use system libs
+sed -i 's@-I$(WITH_LUAJIT)/include@`pkg-config --cflags luajit`@' Makefile
+sed -i 's@-L$(WITH_LUAJIT)/lib@`pkg-config --libs luajit`@' Makefile
+sed -i 's@-I$(WITH_OPENSSL)/include@`pkg-config --cflags openssl`@' Makefile
+sed -i 's@-L$(WITH_OPENSSL)/lib@`pkg-config --cflags openssl`@' Makefile
 
 %build
-# EL7 doesn't have this macro: %make_build VER=%{version}
-%{__make} VER=%{version} %{?_smp_mflags}
+# EL7 doesn't have this macro: %%make_build macro
+%{__make} VER=%{version} %{?_smp_mflags} WITH_LUAJIT=SYS WITH_OPENSSL=SYS
 
 %install
 %{__install} -Dpm0755 %{name} %{buildroot}%{_bindir}/%{name}
@@ -43,8 +50,9 @@ sed -i 's@CFLAGS  += @CFLAGS  += -g @' Makefile
 %{_bindir}/%{name}
 
 %changelog
-* Sat Jun 15 2019 Danila Vershinin <info@getpagespeed.com> 4.1.0-2
+* Sat Jun 15 2019 Danila Vershinin <info@getpagespeed.com> 4.1.0-3
 - proper debuginfo package
+- link against system libraries
 
 * Sat Oct 27 2018 Anatolii Vorona <vorona.tolik@gmail.com> 4.1.0-1
 - added build requires for Copr Build Service (fedora 27+)
