@@ -23,11 +23,14 @@ jobs: # a collection of steps
       - image: getpagespeed/rpmbuilder:centos-7
     working_directory: /sources # directory where steps will run
     <<: *defaults
-  deploy:
+  el8:
     docker:
-      - image: centos:7
-    environment:
-      RPMLINT: 1
+      - image: getpagespeed/rpmbuilder:centos-8
+    working_directory: /sources # directory where steps will run
+    <<: *defaults
+  deploy-el6:
+    docker:
+      - image: kroniak/ssh-client
     working_directory: /output
     steps:
       - attach_workspace:
@@ -36,28 +39,81 @@ jobs: # a collection of steps
           fingerprints:
             - "8c:a4:dd:2c:47:4c:63:aa:90:0b:e0:d6:15:be:87:82"
       - run:
-          name: "Install stuff to deploy"
-          command: yum -y install openssh-clients
-      - run:
           name: "Ensure project specific upload directory to avoid deploy collisions"
-          command: ssh -o StrictHostKeyChecking=no $GPS_BUILD_USER@$GPS_BUILD_SERVER "mkdir -p ~/incoming/$CIRCLE_PROJECT_REPONAME"
+          command: ssh -o StrictHostKeyChecking=no $GPS_BUILD_USER@$GPS_BUILD_SERVER "mkdir -p ~/incoming/$CIRCLE_PROJECT_REPONAME/el6"
       - run:
           name: "Deploy all RPMs to GetPageSpeed repo."
-          command: scp -o StrictHostKeyChecking=no -q -r *.rpm $GPS_BUILD_USER@$GPS_BUILD_SERVER:~/incoming/$CIRCLE_PROJECT_REPONAME/
+          command: scp -o StrictHostKeyChecking=no -q -r *.rpm $GPS_BUILD_USER@$GPS_BUILD_SERVER:~/incoming/$CIRCLE_PROJECT_REPONAME/el6/
       - run:
           name: "Trigger Deploy Hook."
-          command: ssh -o StrictHostKeyChecking=no -q $GPS_BUILD_USER@$GPS_BUILD_SERVER "nohup ~/scripts/incoming.sh $CIRCLE_PROJECT_REPONAME > ~/incoming/$CIRCLE_PROJECT_REPONAME/process.log 2>&1&"
+          command: ssh -o StrictHostKeyChecking=no -q $GPS_BUILD_USER@$GPS_BUILD_SERVER "nohup ~/scripts/incoming.sh $CIRCLE_PROJECT_REPONAME/el6 > ~/incoming/$CIRCLE_PROJECT_REPONAME/el6/process.log 2>&1&"
+  deploy-el7:
+    docker:
+      - image: kroniak/ssh-client
+    working_directory: /output
+    steps:
+      - attach_workspace:
+          at: /output
+      - add_ssh_keys:
+          fingerprints:
+            - "8c:a4:dd:2c:47:4c:63:aa:90:0b:e0:d6:15:be:87:82"
+      - run:
+          name: "Ensure project specific upload directory to avoid deploy collisions"
+          command: ssh -o StrictHostKeyChecking=no $GPS_BUILD_USER@$GPS_BUILD_SERVER "mkdir -p ~/incoming/$CIRCLE_PROJECT_REPONAME/el7"
+      - run:
+          name: "Deploy all RPMs to GetPageSpeed repo."
+          command: scp -o StrictHostKeyChecking=no -q -r *.rpm $GPS_BUILD_USER@$GPS_BUILD_SERVER:~/incoming/$CIRCLE_PROJECT_REPONAME/el7/
+      - run:
+          name: "Trigger Deploy Hook."
+          command: ssh -o StrictHostKeyChecking=no -q $GPS_BUILD_USER@$GPS_BUILD_SERVER "nohup ~/scripts/incoming.sh $CIRCLE_PROJECT_REPONAME/el7 > ~/incoming/$CIRCLE_PROJECT_REPONAME/el7/process.log 2>&1&"
+  deploy-el8:
+    docker:
+      - image: kroniak/ssh-client
+    working_directory: /output
+    steps:
+      - attach_workspace:
+          at: /output
+      - add_ssh_keys:
+          fingerprints:
+            - "8c:a4:dd:2c:47:4c:63:aa:90:0b:e0:d6:15:be:87:82"
+      - run:
+          name: "Ensure project specific upload directory to avoid deploy collisions"
+          command: ssh -o StrictHostKeyChecking=no $GPS_BUILD_USER@$GPS_BUILD_SERVER "mkdir -p ~/incoming/$CIRCLE_PROJECT_REPONAME/el8"
+      - run:
+          name: "Deploy all RPMs to GetPageSpeed repo."
+          command: scp -o StrictHostKeyChecking=no -q -r *.rpm $GPS_BUILD_USER@$GPS_BUILD_SERVER:~/incoming/$CIRCLE_PROJECT_REPONAME/el8/
+      - run:
+          name: "Trigger Deploy Hook."
+          command: ssh -o StrictHostKeyChecking=no -q $GPS_BUILD_USER@$GPS_BUILD_SERVER "nohup ~/scripts/incoming.sh $CIRCLE_PROJECT_REPONAME/el8 > ~/incoming/$CIRCLE_PROJECT_REPONAME/el8/process.log 2>&1&"
 workflows:
   version: 2
-  build-deploy:
+  build-deploy-el6:
     jobs:
       - el6
-      - el7
       - deploy:
           context: org-global
           requires:
             - el6
+          filters:
+            branches:
+              only: master
+  build-deploy-el7:
+    jobs:
+      - el7
+      - deploy:
+          context: org-global
+          requires:
             - el7
+          filters:
+            branches:
+              only: master
+  build-deploy-el8:
+    jobs:
+      - el8
+      - deploy:
+          context: org-global
+          requires:
+            - el8
           filters:
             branches:
               only: master
