@@ -1,6 +1,3 @@
-sudo: required
-language: python
-
 env:
   global:
     - DOCKER_IMAGE=getpagespeed/rpmbuilder
@@ -12,9 +9,6 @@ env:
     - OS_TYPE=fedora OS_DIST=epel OS_VERSION=27
 services:
   - docker
-
-install: true
-
 script:
   - docker run -v ${PWD}:/sources -v ${PWD}:/output:Z ${DOCKER_IMAGE}:${OS_TYPE}-${OS_VERSION}  
   - stat *.rpm
