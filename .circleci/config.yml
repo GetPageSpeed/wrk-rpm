@@ -90,7 +90,7 @@ workflows:
   build-deploy-el6:
     jobs:
       - el6
-      - deploy:
+      - deploy-el6:
           context: org-global
           requires:
             - el6
@@ -100,7 +100,7 @@ workflows:
   build-deploy-el7:
     jobs:
       - el7
-      - deploy:
+      - deploy-el7:
           context: org-global
           requires:
             - el7
@@ -110,7 +110,7 @@ workflows:
   build-deploy-el8:
     jobs:
       - el8
-      - deploy:
+      - deploy-el8:
           context: org-global
           requires:
             - el8
