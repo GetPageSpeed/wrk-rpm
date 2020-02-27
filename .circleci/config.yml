@@ -69,7 +69,10 @@ workflows:
   version: 2
   build-deploy-el6:
     jobs:
-      - el6
+      - el6:
+          filters:
+            branches:
+              only: master
       - deploy-el6:
           context: org-global
           requires:
@@ -79,7 +82,10 @@ workflows:
               only: master
   build-deploy-el7:
     jobs:
-      - el7
+      - el7:
+          filters:
+            branches:
+              only: master
       - deploy-el7:
           context: org-global
           requires:
@@ -89,7 +95,10 @@ workflows:
               only: master
   build-deploy-el8:
     jobs:
-      - el8
+      - el8:
+          filters:
+            branches:
+              only: master
       - deploy-el8:
           context: org-global
           requires:
