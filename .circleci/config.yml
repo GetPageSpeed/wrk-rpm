@@ -47,7 +47,7 @@ jobs: # a collection of steps
     <<: *defaults
   amzn2:
     docker: # run the steps with Docker
-      - image: getpagespeed/amazonlinux-2
+      - image: getpagespeed/rpmbuilder:amazonlinux-2
     <<: *defaults
   el7:
     docker:
