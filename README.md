@@ -8,5 +8,5 @@
 
 If you use CentOS / RHEL, it is highly recommended to install `wrk` from GetPageSpeed repository:
 
-    yum install https://extras.getpagespeed.com/release-el$(rpm -E %{rhel})-latest.rpm
-    yum install wrk
+    yum -y install https://extras.getpagespeed.com/release-latest.rpm
+    yum -y install wrk
