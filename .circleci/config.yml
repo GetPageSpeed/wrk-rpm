@@ -1,129 +1,28 @@
-version: 2
+version: 2.1
 
-defaults: &defaults
-    working_directory: /sources # directory where steps will run
-    environment:
-      RPMLINT: 1
-    steps: # a set of executable commands
-      - checkout # special step to check out source code to working directory
-      - run:
-          name: "Run the build itself: this will do rpmlint and check RPMs existence among other things."
-          command: build
-      - persist_to_workspace:
-          root: /output
-          paths:
-            - "*.rpm"
-deploy: &deploy
-  docker:
-    - image: kroniak/ssh-client
-  working_directory: /output
-  steps:
-    - attach_workspace:
-        at: /output
-    - add_ssh_keys:
-        fingerprints:
-          - "8c:a4:dd:2c:47:4c:63:aa:90:0b:e0:d6:15:be:87:82"
-    - run:
-        name: "Ensure project specific upload directory to avoid deploy collisions"
-        command: >
-          ssh -o StrictHostKeyChecking=no
-          $GPS_BUILD_USER@$GPS_BUILD_SERVER
-          "mkdir -p ~/incoming/$CIRCLE_PROJECT_REPONAME/$DISTRO"
-    - run:
-        name: "Deploy all RPMs to GetPageSpeed repo."
-        command: >
-          scp -o StrictHostKeyChecking=no -q -r *.rpm
-          $GPS_BUILD_USER@$GPS_BUILD_SERVER:~/incoming/$CIRCLE_PROJECT_REPONAME/$DISTRO/
-    - run:
-        name: "Trigger Deploy Hook."
-        command: >
-          ssh -o StrictHostKeyChecking=no -q
-          $GPS_BUILD_USER@$GPS_BUILD_SERVER
-          "nohup ~/scripts/incoming.sh $CIRCLE_PROJECT_REPONAME/$DISTRO > ~/incoming/$CIRCLE_PROJECT_REPONAME/$DISTRO/process.log 2>&1&"
-jobs: # a collection of steps
-  el6:
-    docker: # run the steps with Docker
-      - image: getpagespeed/rpmbuilder:centos-6
-    <<: *defaults
-  amzn2:
-    docker: # run the steps with Docker
-      - image: getpagespeed/rpmbuilder:amazonlinux-2
-    <<: *defaults
-  el7:
-    docker:
-      - image: getpagespeed/rpmbuilder:centos-7
-    <<: *defaults
-  el8:
-    docker:
-      - image: getpagespeed/rpmbuilder:centos-8
-    <<: *defaults
-  deploy-el6:
-    <<: *deploy
-    environment:
-      DISTRO: el6
-  deploy-amzn2:
-    <<: *deploy
-    environment:
-      DISTRO: amzn2
-  deploy-el7:
-    <<: *deploy
-    environment:
-      DISTRO: el7
-  deploy-el8:
-    <<: *deploy
-    environment:
-      DISTRO: el8
+# this allows you to use CircleCI's dynamic configuration feature
+setup: true
+
+# the continuation orb is required in order to use dynamic configuration
+orbs:
+  continuation: circleci/continuation@0.1.2
+
+# our defined job, and its steps
+jobs:
+  setup:
+    executor: continuation/default
+    steps:
+      - checkout # checkout code
+      - run: # run a command
+          name: Generate config
+          command: |
+            curl "https://raw.githubusercontent.com/GetPageSpeed/buildstrap/main/generated_config.yml" -o .circleci/generated_config.yml
+            cat .circleci/generated_config.yml
+      - continuation/continue:
+          configuration_path: .circleci/generated_config.yml # use newly generated config to continue
+
+# our single workflow, that triggers the setup job defined above
 workflows:
-  version: 2
-  build-deploy-el6:
+  setup:
     jobs:
-      - el6:
-          filters:
-            branches:
-              only: master
-      - deploy-el6:
-          context: org-global
-          requires:
-            - el6
-          filters:
-            branches:
-              only: master
-  build-deploy-amzn2:
-    jobs:
-      - amzn2:
-          filters:
-            branches:
-              only: master
-      - deploy-amzn2:
-          context: org-global
-          requires:
-            - amzn2
-          filters:
-            branches:
-              only: master
-  build-deploy-el7:
-    jobs:
-      - el7:
-          filters:
-            branches:
-              only: master
-      - deploy-el7:
-          context: org-global
-          requires:
-            - el7
-          filters:
-            branches:
-              only: master
-  build-deploy-el8:
-    jobs:
-      - el8:
-          filters:
-            branches:
-              only: master
-      - deploy-el8:
-          context: org-global
-          requires:
-            - el8
-          filters:
-            branches:
-              only: master
+      - setup
