@@ -1,6 +1,6 @@
 Name: wrk
-Version: 4.1.0
-Release: 3%{?dist}
+Version: 4.2.0
+Release: 1%{?dist}
 Summary: HTTP benchmarking tool
 License: Modified Apache 2.0 License
 URL: https://github.com/wg/wrk
@@ -49,6 +49,9 @@ CFLAGS='-g' %{__make} VER=%{version} %{?_smp_mflags} WITH_LUAJIT=SYS WITH_OPENSS
 %{_bindir}/%{name}
 
 %changelog
+* Tue Dec 14 2021 Danila Vershinin <info@getpagespeed.com> 4.2.0-1
+- release 4.2.0
+
 * Sat Jun 15 2019 Danila Vershinin <info@getpagespeed.com> 4.1.0-3
 - proper debuginfo package
 - link against system libraries
