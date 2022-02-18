@@ -50,37 +50,9 @@ jobs:
 version: 2.1
 workflows:
   build-deploy-amzn2:
-  - build: {dist: amzn2, name: build-amzn2}
+  - build: {dist: amzn2}
   - deploy:
       context: org-global
       dist: amzn2
       name: deploy-amzn2
-      requires: [build-amzn2]
-  build-deploy-el7:
-  - build: {dist: el7, name: build-el7}
-  - deploy:
-      context: org-global
-      dist: el7
-      name: deploy-el7
-      requires: [build-el7]
-  build-deploy-el8:
-  - build: {dist: el8, name: build-el8}
-  - deploy:
-      context: org-global
-      dist: el8
-      name: deploy-el8
-      requires: [build-el8]
-  build-deploy-fc34:
-  - build: {dist: fc34, name: build-fc34}
-  - deploy:
-      context: org-global
-      dist: fc34
-      name: deploy-fc34
-      requires: [build-fc34]
-  build-deploy-fc35:
-  - build: {dist: fc35, name: build-fc35}
-  - deploy:
-      context: org-global
-      dist: fc35
-      name: deploy-fc35
-      requires: [build-fc35]
+      requires: [build]
