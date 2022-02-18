@@ -29,7 +29,7 @@ jobs:
   deploy:
     executor: {dist: << parameters.dist >>, name: deploy}
     parameters:
-      dist: {description: The dist tag of OS to deploy for, type: string}
+      dist: {type: string}
     steps:
     - attach_workspace: {at: /output}
     - add_ssh_keys:
