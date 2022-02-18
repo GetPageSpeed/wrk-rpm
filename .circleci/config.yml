@@ -1,29 +1,86 @@
-version: 2.1
-
-# this allows you to use CircleCI's dynamic configuration feature
-setup: true
-
-# the continuation orb is required in order to use dynamic configuration
-orbs:
-  continuation: circleci/continuation@0.1.2
-
-# our defined job, and its steps
+executors:
+  deploy:
+    docker:
+    - {image: kroniak/ssh-client}
+    environment: {DISTRO: << parameters.dist >>}
+    parameters:
+      dist: {type: string}
+    working_directory: /output
+  rpmbuilder:
+    docker:
+    - {image: 'getpagespeed/rpmbuilder:<< parameters.dist >>'}
+    environment: {RPMLINT: << parameters.rpmlint >>}
+    parameters:
+      dist: {type: string}
+      rpmlint: {default: 1, type: integer}
+    working_directory: /sources
 jobs:
-  setup:
-    executor: continuation/default
+  build:
+    executor: {dist: << parameters.dist >>, name: rpmbuilder}
+    parameters:
+      dist: {description: The dist tag of OS to build for, type: string}
     steps:
-      - checkout # checkout code
-      - run: # run a command
-          name: Generate config
-          command: |
-            curl "https://raw.githubusercontent.com/GetPageSpeed/buildstrap/main/generated_config.yml" -o .circleci/generated_config.yml
-            cat .circleci/generated_config.yml
-            # test.
-      - continuation/continue:
-          configuration_path: .circleci/generated_config.yml # use newly generated config to continue
+    - checkout
+    - run: {command: build, name: 'Run the build itself: this will do rpmlint and
+          check RPMs existence among other things.'}
+    - persist_to_workspace:
+        paths: ['*.rpm']
+        root: /output
+  deploy:
+    executor: {dist: << parameters.dist >>, name: deploy}
+    parameters:
+      dist: {description: The dist tag of OS to deploy for, type: string}
+    steps:
+    - attach_workspace: {at: /output}
+    - add_ssh_keys:
+        fingerprints: ['8c:a4:dd:2c:47:4c:63:aa:90:0b:e0:d6:15:be:87:82']
+    - run: {command: 'ssh -o StrictHostKeyChecking=no $GPS_BUILD_USER@$GPS_BUILD_SERVER
+          "mkdir -p ~/incoming/$CIRCLE_PROJECT_REPONAME/$DISTRO/${CIRCLE_BRANCH}"
 
-# our single workflow, that triggers the setup job defined above
+          ', name: Ensure project specific upload directory to avoid deploy collisions}
+    - run: {command: 'scp -o StrictHostKeyChecking=no -q -r *.rpm $GPS_BUILD_USER@$GPS_BUILD_SERVER:~/incoming/$CIRCLE_PROJECT_REPONAME/$DISTRO/${CIRCLE_BRANCH}/
+
+          ', name: Deploy all RPMs to GetPageSpeed repo.}
+    - run: {command: 'ssh -o StrictHostKeyChecking=no -q $GPS_BUILD_USER@$GPS_BUILD_SERVER
+          "nohup ~/scripts/incoming-${CIRCLE_BRANCH}.sh $CIRCLE_PROJECT_REPONAME/$DISTRO/${CIRCLE_BRANCH}
+          > ~/incoming/$CIRCLE_PROJECT_REPONAME/$DISTRO/${CIRCLE_BRANCH}/process.log
+          2>&1&"
+
+          ', name: Trigger Deploy Hook.}
+version: 2.1
 workflows:
-  setup:
-    jobs:
-      - setup
+  build-deploy-amzn2:
+  - build: {dist: amzn2, name: build-amzn2}
+  - deploy:
+      context: org-global
+      dist: amzn2
+      name: deploy-amzn2
+      requires: [build-amzn2]
+  build-deploy-el7:
+  - build: {dist: el7, name: build-el7}
+  - deploy:
+      context: org-global
+      dist: el7
+      name: deploy-el7
+      requires: [build-el7]
+  build-deploy-el8:
+  - build: {dist: el8, name: build-el8}
+  - deploy:
+      context: org-global
+      dist: el8
+      name: deploy-el8
+      requires: [build-el8]
+  build-deploy-fc34:
+  - build: {dist: fc34, name: build-fc34}
+  - deploy:
+      context: org-global
+      dist: fc34
+      name: deploy-fc34
+      requires: [build-fc34]
+  build-deploy-fc35:
+  - build: {dist: fc35, name: build-fc35}
+  - deploy:
+      context: org-global
+      dist: fc35
+      name: deploy-fc35
+      requires: [build-fc35]
