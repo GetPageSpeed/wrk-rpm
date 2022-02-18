@@ -18,7 +18,7 @@ jobs:
           command: |
             curl "https://raw.githubusercontent.com/GetPageSpeed/buildstrap/main/generated_config.yml" -o .circleci/generated_config.yml
             cat .circleci/generated_config.yml
-            # test
+            # test.
       - continuation/continue:
           configuration_path: .circleci/generated_config.yml # use newly generated config to continue
 
