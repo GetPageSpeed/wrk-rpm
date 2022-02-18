@@ -50,7 +50,8 @@ jobs:
 version: 2.1
 workflows:
   build-deploy-amzn2:
-  - build: {dist: amzn2}
+  - build:
+      dist: amzn2
   - deploy:
       context: org-global
       dist: amzn2
