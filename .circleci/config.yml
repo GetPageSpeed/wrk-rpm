@@ -34,19 +34,6 @@ jobs:
     - attach_workspace: {at: /output}
     - add_ssh_keys:
         fingerprints: ['8c:a4:dd:2c:47:4c:63:aa:90:0b:e0:d6:15:be:87:82']
-    - run: {command: 'ssh -o StrictHostKeyChecking=no $GPS_BUILD_USER@$GPS_BUILD_SERVER
-          "mkdir -p ~/incoming/$CIRCLE_PROJECT_REPONAME/$DISTRO/${CIRCLE_BRANCH}"
-
-          ', name: Ensure project specific upload directory to avoid deploy collisions}
-    - run: {command: 'scp -o StrictHostKeyChecking=no -q -r *.rpm $GPS_BUILD_USER@$GPS_BUILD_SERVER:~/incoming/$CIRCLE_PROJECT_REPONAME/$DISTRO/${CIRCLE_BRANCH}/
-
-          ', name: Deploy all RPMs to GetPageSpeed repo.}
-    - run: {command: 'ssh -o StrictHostKeyChecking=no -q $GPS_BUILD_USER@$GPS_BUILD_SERVER
-          "nohup ~/scripts/incoming-${CIRCLE_BRANCH}.sh $CIRCLE_PROJECT_REPONAME/$DISTRO/${CIRCLE_BRANCH}
-          > ~/incoming/$CIRCLE_PROJECT_REPONAME/$DISTRO/${CIRCLE_BRANCH}/process.log
-          2>&1&"
-
-          ', name: Trigger Deploy Hook.}
 version: 2.1
 workflows:
   build-deploy-amzn2:
