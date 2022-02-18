@@ -18,7 +18,7 @@ jobs:
   build:
     executor: {dist: << parameters.dist >>, name: rpmbuilder}
     parameters:
-      dist: {description: The dist tag of OS to build for, type: string}
+      dist: {type: string}
     steps:
     - checkout
     - run: {command: build, name: 'Run the build itself: this will do rpmlint and
