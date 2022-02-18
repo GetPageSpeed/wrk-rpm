@@ -43,4 +43,3 @@ workflows:
       context: org-global
       dist: amzn2
       name: deploy-amzn2
-      requires: [build]
