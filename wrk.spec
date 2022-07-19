@@ -36,7 +36,9 @@ sed -i 's@-L$(WITH_OPENSSL)/lib@`pkg-config --cflags openssl`@' Makefile
 %build
 # EL7 doesn't have this macro: %%make_build macro
 # passing -g because Makefile doesn't (for debuginfo)
-CFLAGS='-g' %{__make} VER=%{version} %{?_smp_mflags} WITH_LUAJIT=SYS WITH_OPENSSL=SYS
+# FC36 when linking gives error:
+# /usr/bin/ld: obj/wrk.o: relocation R_X86_64_32 against `.text' can not be used when making a PIE object; recompile with -fPIE
+CFLAGS='-g -fPIE' %{__make} VER=%{version} %{?_smp_mflags} WITH_LUAJIT=SYS WITH_OPENSSL=SYS
 
 %install
 %{__install} -Dpm0755 %{name} %{buildroot}%{_bindir}/%{name}
