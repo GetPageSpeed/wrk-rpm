@@ -129,14 +129,6 @@ workflows:
         dist: fc40
         name: deploy-fc40
         requires: [build-fc40]
-  build-deploy-fc41:
-    jobs:
-    - build: {dist: fc41, name: build-fc41}
-    - deploy:
-        context: org-global
-        dist: fc41
-        name: deploy-fc41
-        requires: [build-fc41]
   build-deploy-sles15:
     jobs:
     - build: {dist: sles15, name: build-sles15}
