@@ -27,27 +27,21 @@ BuildRequires: perl
 
 %prep
 %setup -q
-# use system libs
+# Upstream Makefile hardcodes `-lluajit-5.1` and binary `luajit`. luajit2 in
+# GetPageSpeed extras ships /usr/bin/luajit2 + libluajit2-5.1.so.2, so retarget
+# the Makefile to those names.
 sed -i 's@-I$(WITH_LUAJIT)/include@`pkg-config --cflags luajit2`@' Makefile
-sed -i 's@-L$(WITH_LUAJIT)/lib@`pkg-config --libs luajit2`@' Makefile
+sed -i 's@-L$(WITH_LUAJIT)/lib@@'                                  Makefile
 sed -i 's@-I$(WITH_OPENSSL)/include@`pkg-config --cflags openssl`@' Makefile
-sed -i 's@-L$(WITH_OPENSSL)/lib@`pkg-config --cflags openssl`@' Makefile
+sed -i 's@-L$(WITH_OPENSSL)/lib@@'                                  Makefile
+sed -i 's@-lluajit-5\.1@`pkg-config --libs luajit2`@'                Makefile
+sed -i 's@\bluajit -bc\b@luajit2 -bc@'                              Makefile
 
 %build
 # EL7 doesn't have this macro: %%make_build macro
 # passing -g because Makefile doesn't (for debuginfo)
 # FC36 when linking gives error:
 # /usr/bin/ld: obj/wrk.o: relocation R_X86_64_32 against `.text' can not be used when making a PIE object; recompile with -fPIE
-# luajit2 ships /usr/bin/luajit2 (not /usr/bin/luajit) on EL7 / amzn2 aarch64
-# where system luajit is absent. Symlink so Makefile's `luajit -bc` lookup succeeds.
-ln -sf /usr/bin/luajit2 /usr/local/bin/luajit
-# luajit2-devel ships libluajit2-5.1.so.2 but pkg-config returns "-lluajit-5.1" so
-# linker looks for libluajit-5.1.so. Create a symlink to bridge the naming gap.
-LIBLUAJIT_FILE=$(find /usr/lib64 /usr/lib -maxdepth 2 -name 'libluajit*-5.1.so.2' 2>/dev/null | head -1)
-if [ -n "$LIBLUAJIT_FILE" ]; then
-  LIBDIR=$(dirname "$LIBLUAJIT_FILE")
-  [ ! -e "$LIBDIR/libluajit-5.1.so" ] && ln -sf "$LIBLUAJIT_FILE" "$LIBDIR/libluajit-5.1.so" || true
-fi
 CFLAGS='-g -fPIE' %{__make} VER=%{version} %{?_smp_mflags} WITH_LUAJIT=SYS WITH_OPENSSL=SYS
 
 %install
