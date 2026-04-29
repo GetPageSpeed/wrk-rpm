@@ -9,7 +9,7 @@ Source0: %{url}/archive/%{version}/%{name}-%{version}.tar.gz
 
 BuildRequires: make
 BuildRequires: gcc
-BuildRequires: pkgconfig(luajit)
+BuildRequires: pkgconfig(luajit2)
 BuildRequires: pkgconfig(openssl)
 
 %if ( 0%{?fedora} >= 27 )
@@ -28,8 +28,8 @@ BuildRequires: perl
 %prep
 %setup -q
 # use system libs
-sed -i 's@-I$(WITH_LUAJIT)/include@`pkg-config --cflags luajit`@' Makefile
-sed -i 's@-L$(WITH_LUAJIT)/lib@`pkg-config --libs luajit`@' Makefile
+sed -i 's@-I$(WITH_LUAJIT)/include@`pkg-config --cflags luajit2`@' Makefile
+sed -i 's@-L$(WITH_LUAJIT)/lib@`pkg-config --libs luajit2`@' Makefile
 sed -i 's@-I$(WITH_OPENSSL)/include@`pkg-config --cflags openssl`@' Makefile
 sed -i 's@-L$(WITH_OPENSSL)/lib@`pkg-config --cflags openssl`@' Makefile
 
