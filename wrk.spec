@@ -38,6 +38,9 @@ sed -i 's@-L$(WITH_OPENSSL)/lib@`pkg-config --cflags openssl`@' Makefile
 # passing -g because Makefile doesn't (for debuginfo)
 # FC36 when linking gives error:
 # /usr/bin/ld: obj/wrk.o: relocation R_X86_64_32 against `.text' can not be used when making a PIE object; recompile with -fPIE
+# luajit2 ships /usr/bin/luajit2 (not /usr/bin/luajit) on EL7 / amzn2 aarch64
+# where system luajit is absent. Symlink so Makefile's `luajit -bc` lookup succeeds.
+ln -sf /usr/bin/luajit2 /usr/local/bin/luajit
 CFLAGS='-g -fPIE' %{__make} VER=%{version} %{?_smp_mflags} WITH_LUAJIT=SYS WITH_OPENSSL=SYS
 
 %install
