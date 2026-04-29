@@ -41,6 +41,10 @@ sed -i 's@-L$(WITH_OPENSSL)/lib@`pkg-config --cflags openssl`@' Makefile
 # luajit2 ships /usr/bin/luajit2 (not /usr/bin/luajit) on EL7 / amzn2 aarch64
 # where system luajit is absent. Symlink so Makefile's `luajit -bc` lookup succeeds.
 ln -sf /usr/bin/luajit2 /usr/local/bin/luajit
+# luajit2-devel may not ship libluajit-5.1.so symlink on all distros (only versioned .so.2);
+# create the unversioned symlink so the linker can find -lluajit-5.1.
+LIBLUAJIT_SO=$(ldconfig -p 2>/dev/null | awk '/libluajit-5\.1\.so\.2/{print $NF; exit}')
+[ -n "$LIBLUAJIT_SO" ] && [ ! -e "${LIBLUAJIT_SO%.2}" ] && ln -sf "$LIBLUAJIT_SO" "${LIBLUAJIT_SO%.2}"
 CFLAGS='-g -fPIE' %{__make} VER=%{version} %{?_smp_mflags} WITH_LUAJIT=SYS WITH_OPENSSL=SYS
 
 %install
