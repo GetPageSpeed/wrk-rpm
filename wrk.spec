@@ -35,13 +35,16 @@ sed -i 's@-L$(WITH_LUAJIT)/lib@@'                                  Makefile
 sed -i 's@-I$(WITH_OPENSSL)/include@`pkg-config --cflags openssl`@' Makefile
 sed -i 's@-L$(WITH_OPENSSL)/lib@@'                                  Makefile
 sed -i 's@-lluajit-5\.1@`pkg-config --libs luajit2`@'                Makefile
-sed -i 's@\bluajit -bc\b@luajit2 -bc@'                              Makefile
+sed -i 's@\bluajit -b @luajit2 -b @'                              Makefile
 
 %build
 # EL7 doesn't have this macro: %%make_build macro
 # passing -g because Makefile doesn't (for debuginfo)
 # FC36 when linking gives error:
 # /usr/bin/ld: obj/wrk.o: relocation R_X86_64_32 against `.text' can not be used when making a PIE object; recompile with -fPIE
+# luajit2 -b (bytecode for src/wrk.lua) needs jit/bcsave.lua, which luajit2 installs
+# under its own share dir, off the binary's default search path.
+export LUA_PATH="%{_datadir}/luajit2-2.1/?.lua;;"
 CFLAGS='-g -fPIE' %{__make} VER=%{version} %{?_smp_mflags} WITH_LUAJIT=SYS WITH_OPENSSL=SYS
 
 %install
